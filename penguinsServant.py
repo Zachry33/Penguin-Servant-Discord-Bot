@@ -15,6 +15,7 @@ GUILD = os.getenv('DISCORD_GUILD')
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.voice_states = True
 bot = commands.Bot( command_prefix='!',intents = intents)
 
 # Connect bot to database and initilize table with users
@@ -113,7 +114,19 @@ async def on_member_join(member):
     await member.create_dm()
     await member.dm_channel.send("How did you get here")
 
-#
+# If a user joins a VC and they have the bad boy role then they will be server muted or vise vera if the opposite
+@bot.event
+async def on_voice_state_update(member, before, after):
+    if before.mute == False and getRole('Bad Boy') in member.roles and after.channel != None:
+        try :
+            await member.edit(mute = True)
+        except :
+            print ('User not in Voice')
+    elif before.mute == True and getRole('Bad Boy') not in member.roles and after.channel != None:
+        try :
+            await member.edit(mute = False)
+        except :
+            print ('User not in Voice')
 
 # Rolls a random number between 0 and 100
 @bot.command(name = 'roll', help = ': Rolls a number between 0 and 100')
