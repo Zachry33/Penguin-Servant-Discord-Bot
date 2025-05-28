@@ -106,11 +106,14 @@ async def on_ready():
     for member in guild.members:
         cursor.execute(f'INSERT OR IGNORE INTO {GUILD.replace(' ', '')} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
 
-# Sends a message to any user who joins the server
+# Sends a message to any user who joins the server and adds them to the db
 @bot.event
 async def on_member_join(member):
+    cursor.execute(f'INSERT OR IGNORE INTO {GUILD.replace(' ','')} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
     await member.create_dm()
     await member.dm_channel.send("How did you get here")
+
+#
 
 # Rolls a random number between 0 and 100
 @bot.command(name = 'roll', help = ': Rolls a number between 0 and 100')
@@ -124,6 +127,7 @@ async def roll(context):
 # This command will take in a name and do the following:
 # - Give the "Bad Boy" role
 # - Server mute them if they are in a call
+# - update current nickname into db
 # - Change their nick to "Bad Boy"
 @bot.command (name = 'silence', help = ': This user has been a bad boy and they dont deserve to talk (gives bad boy role)')
 @commands.has_role('Penguin Owner')
@@ -143,6 +147,7 @@ async def silence(context, *nameArr) :
                 await target.edit(mute = True)
             except:
                 print('User not in voice')
+            cursor.execute(f'UPDATE {GUILD.replace(' ','')} SET Nick = ? WHERE Username = ?', (target.nick, target.name))
             await target.edit(nick = 'Bad Boy')
             await context.send(f'{badBoy} has been silenced')
 
