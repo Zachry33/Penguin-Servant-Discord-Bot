@@ -128,6 +128,19 @@ async def on_voice_state_update(member, before, after):
         except :
             print ('User not in Voice')
 
+# If someone with the bad boy role trys to talk in a text channel their message will be deleted
+@bot.event
+async def on_message(message):
+    await bot.process_commands(message)
+    if message.author == bot.user:
+      return
+    else :
+        if type (message.author) is discord.member.Member :
+            if getRole('Bad Boy') in message.author.roles and type(message.channel) is not discord.channel.DMChannel: 
+                await message.channel.send(f'{message.author} tried to speak')
+                await message.delete()
+
+
 # Rolls a random number between 0 and 100
 @bot.command(name = 'roll', help = ': Rolls a number between 0 and 100')
 async def roll(context):
