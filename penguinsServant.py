@@ -4,6 +4,7 @@ import discord
 from dotenv import load_dotenv
 import random
 from discord.ext import commands
+import sqlite3
 
 # Note: Discord Guilds == Discord Servers
 load_dotenv()
@@ -15,6 +16,11 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot( command_prefix='!',intents = intents)
+
+# Connect bot to database and initilize table with users
+connection = sqlite3.connect('PenguinsServant.db')
+cursor = connection.cursor()
+cursor.execute('CREATE TABLE IF NOT EXISTS ' + GUILD.replace(' ', '') + ' (Username TEXT PRIMARY KEY, Nick TEXT)')
 
 user = bot.user
 
@@ -96,6 +102,10 @@ async def on_ready():
         await guild.create_role(name = 'Bad Boy', colour = discord.Colour.darker_grey())
         await getRole('Bad Boy').move(above=getRole('Penguin Owner'))
 
+    # Insert new data into database
+    for member in guild.members:
+        cursor.execute(f'INSERT OR IGNORE INTO {GUILD.replace(' ', '')} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
+
 # Sends a message to any user who joins the server
 @bot.event
 async def on_member_join(member):
@@ -111,7 +121,6 @@ async def roll(context):
         response = random.randint(0,100)
         await context.send(response)
 
-#TODO check permision hierarchy
 # This command will take in a name and do the following:
 # - Give the "Bad Boy" role
 # - Server mute them if they are in a call
@@ -126,6 +135,8 @@ async def silence(context, *nameArr) :
         target = getMember(badBoy)
         if target == None :
             await context.send(f'{badBoy} does not exist')
+        elif target.top_role >= getRole('Penguin Owner'):
+            await context.send(f'{badBoy} has too much aura to be silenced')
         else :
             await target.add_roles(getRole('Bad Boy'))
             try:
@@ -135,7 +146,6 @@ async def silence(context, *nameArr) :
             await target.edit(nick = 'Bad Boy')
             await context.send(f'{badBoy} has been silenced')
 
-# TODO: change to previous nick after
 # This command will take in a name and do the following:
 # - Remove the "Bad Boy" role
 # - Server unmute them if they are in a call
@@ -156,8 +166,9 @@ async def unsilence(context, *nameArr) :
                 await target.edit(mute = False)
             except:
                 print('User not in voice')
-            # TODO: change to previous nick after
-            await target.edit (nick = None)
+            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name,))
+            oldNick = cursor.fetchone()
+            await target.edit (nick = oldNick[0])
             await context.send(f'{goodBoy} has been forgiven')
                 
 # On appropriate errors the bot will send back the appropriate message
