@@ -201,6 +201,8 @@ async def unsilence(context, *nameArr) :
             oldNick = cursor.fetchone()
             await target.edit (nick = oldNick[0])
             await context.send(f'{goodBoy} has been forgiven')
+
+# This Command will allow you to interact with a virtual penguin with battling and leveling
                 
 # On appropriate errors the bot will send back the appropriate message
 @bot.event
