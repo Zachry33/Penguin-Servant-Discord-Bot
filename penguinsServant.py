@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import random
 from discord.ext import commands
 import sqlite3
+import datetime
 
 # Note: Discord Guilds == Discord Servers
 load_dotenv()
@@ -22,6 +23,7 @@ bot = commands.Bot( command_prefix='!',intents = intents)
 connection = sqlite3.connect('PenguinsServant.db')
 cursor = connection.cursor()
 cursor.execute('CREATE TABLE IF NOT EXISTS ' + GUILD.replace(' ', '') + ' (Username TEXT PRIMARY KEY, Nick TEXT)')
+cursor.execute('CREATE TABLE IF NOT EXISTS ' + GUILD.replace(' ', '') + '_List' + ' (Content TEXT, Due INTEGER, Username TEXT, FOREIGN KEY(Username) REFERENCES ' + GUILD.replace(' ', '') + '(Username))')
 
 user = bot.user
 
@@ -79,6 +81,23 @@ def getGuild(GUILD) :
     for guild in bot.guilds:
         if guild.name == GUILD:
             return guild
+
+# Accepts a datetime delta object and returns a strng with the format of ? days ? hours
+def getDueDate(dtDelta) :
+    # Total seconds in the duration
+    total_seconds = int(dtDelta.total_seconds())
+    
+    # Calculate days, then the remaining seconds
+    days, remaining_seconds = divmod(total_seconds, 86400) # 60*60*24 seconds in a day
+    
+    # Calculate hours from the remaining seconds
+    hours, _ = divmod(remaining_seconds, 3600) # 60*60 seconds in an hour
+    
+    # Use 'day' or 'days' for correct grammar
+    day_str = "day" if days == 1 else "days"
+    hour_str = "hour" if hours == 1 else "hours"
+    
+    return f'{days} {day_str}, {hours} {hour_str}'
 
 # On Connection to discord
 @bot.event
@@ -197,10 +216,53 @@ async def unsilence(context, *nameArr) :
                 await target.edit(mute = False)
             except:
                 print('User not in voice')
-            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name,))
+            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name))
             oldNick = cursor.fetchone()
             await target.edit (nick = oldNick[0])
             await context.send(f'{goodBoy} has been forgiven')
+
+# This command will display the users current to do list with given due dates
+@bot.command (name = 'list', help = ': this users current to do list will be displayed')
+async def list (context) :
+    if context.author == bot.user:
+        return
+    else :
+        cursor.execute(f'SELECT Content, Due FROM {GUILD.replace(' ', '')}_List WHERE Username = ? ORDER BY Due ASC', (context.author))
+        listData = cursor.fetchall()
+        output = ""
+        for row in listData:
+            output += row[0] + ' Due in: ' + getDueDate(datetime.datetime.fromtimestamp(row[1])-datetime.datetime.now)
+        
+
+# This command will add the specified item to the users current to do list
+@bot.command (name = 'add', help = ': this will add the item specified to the users list. Format: ("content" + " " + "MM/DD/HH)"')
+async def add (context, *textArr) :
+    if context.author == bot.user:
+        return
+    elif len(textArr) == 0:
+        await context.send('Improper Format')
+    else :
+        # parse the given date into unix timestamp
+        date = datetime.strptime(datetime.datetime.now().year + textArr[-1], '%Y/%m/%d/%H')
+        timestamp = date.timestamp()
+        if datetime.datetime.now > date :
+            await context.send('Improper Format')
+            return
+        # add the rest of the content into a string and add it to the list
+        content = ' '.join(textArr[:-1])
+        cursor.execute(f'INSERT INTO {GUILD.replace(' ','')}_List (Content, Due, Username) VALUES (?, ? ,?)', (content, timestamp, context.author))
+        await context.send(f'{content} added to list')
+
+# This command will remove the specified item from the users current to do list 
+@bot.command (name = 'complete', help = ': this will remove the specified item from the users list. (must specify exact name)')
+async def remove(context, *textArr) :
+    if context.author == bot.user:
+        return
+    elif len(textArr) == 0:
+        await context.send('Improper Format')
+    else :
+        pass
+
 
 # This Command will allow you to interact with a virtual penguin with battling and leveling
                 
