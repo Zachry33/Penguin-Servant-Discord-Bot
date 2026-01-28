@@ -231,7 +231,8 @@ async def list (context) :
         listData = cursor.fetchall()
         output = ""
         for row in listData:
-            output += row[0] + ' Due in: ' + getDueDate(datetime.datetime.fromtimestamp(row[1])-datetime.datetime.now)
+            output += row[0] + ' Due in: ' + getDueDate(datetime.datetime.fromtimestamp(row[1])-datetime.datetime.now) + '\n'
+        await context.send(output.strip())
         
 
 # This command will add the specified item to the users current to do list
@@ -249,7 +250,7 @@ async def add (context, *textArr) :
             await context.send('Improper Format')
             return
         # add the rest of the content into a string and add it to the list
-        content = ' '.join(textArr[:-1])
+        content = ' '.join(textArr[:-1]).strip()
         cursor.execute(f'INSERT INTO {GUILD.replace(' ','')}_List (Content, Due, Username) VALUES (?, ? ,?)', (content, timestamp, context.author))
         await context.send(f'{content} added to list')
 
@@ -261,7 +262,15 @@ async def remove(context, *textArr) :
     elif len(textArr) == 0:
         await context.send('Improper Format')
     else :
-        pass
+        content = ' '.join(textArr).strip()
+        cursor.execute(f'SELECT Content FROM {GUILD.replace(' ', '')}_List WHERE Username = ? AND Content = ?', (context.author, content))
+        listData = cursor.fetchone()
+        if (listData[0].strip() == content) :
+            cursor.execute(f'DELETE FROM {GUILD.replace(' ','')}_List WHERE Content = ? AND Username = ?', (content, context.author))
+            await context.send(f'{content} has bee removed from your list')
+        else :
+            await context.send(f'{content} was not found in your list')
+
 
 
 # This Command will allow you to interact with a virtual penguin with battling and leveling
