@@ -216,7 +216,7 @@ async def unsilence(context, *nameArr) :
                 await target.edit(mute = False)
             except:
                 print('User not in voice')
-            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name))
+            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name,))
             oldNick = cursor.fetchone()
             await target.edit (nick = oldNick[0])
             await context.send(f'{goodBoy} has been forgiven')
@@ -227,12 +227,16 @@ async def list (context) :
     if context.author == bot.user:
         return
     else :
-        cursor.execute(f'SELECT Content, Due FROM {GUILD.replace(' ', '')}_List WHERE Username = ? ORDER BY Due ASC', (context.author))
+        cursor.execute(f'SELECT Content, Due FROM {GUILD.replace(' ', '')}_List WHERE Username = ? ORDER BY Due ASC', (getMember(context.author),))
         listData = cursor.fetchall()
         output = ""
         for row in listData:
             output += row[0] + ' Due in: ' + getDueDate(datetime.datetime.fromtimestamp(row[1])-datetime.datetime.now) + '\n'
-        await context.send(output.strip())
+        output = output.strip()
+        if (output == '') :
+            await context.send('List is empty')
+        else :
+            await context.send(output)
         
 
 # This command will add the specified item to the users current to do list
@@ -247,7 +251,7 @@ async def add (context, *textArr) :
         date = datetime.strptime(datetime.datetime.now().year + textArr[-1], '%Y/%m/%d/%H')
         timestamp = date.timestamp()
         if datetime.datetime.now > date :
-            await context.send('Improper Format')
+            await context.send('Improper Time Format')
             return
         # add the rest of the content into a string and add it to the list
         content = ' '.join(textArr[:-1]).strip()
@@ -265,9 +269,11 @@ async def remove(context, *textArr) :
         content = ' '.join(textArr).strip()
         cursor.execute(f'SELECT Content FROM {GUILD.replace(' ', '')}_List WHERE Username = ? AND Content = ?', (context.author, content))
         listData = cursor.fetchone()
-        if (listData[0].strip() == content) :
+        if (len(listData)== 0) :
+            await context.send(f'{content} was not found in your list')
+        elif (listData[0].strip() == content) :
             cursor.execute(f'DELETE FROM {GUILD.replace(' ','')}_List WHERE Content = ? AND Username = ?', (content, context.author))
-            await context.send(f'{content} has bee removed from your list')
+            await context.send(f'{content} has been removed from your list')
         else :
             await context.send(f'{content} was not found in your list')
 
@@ -282,7 +288,7 @@ async def on_command_error(context,error) :
     if isinstance (error,commands.errors.MissingRole): 
         await context.send(f'You do not have the role Penguin Owner so you can not command me')
     elif isinstance (error,commands.errors.CommandInvokeError):
-        raise
+        raise (error)
     else :
         raise
 
