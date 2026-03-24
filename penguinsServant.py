@@ -278,7 +278,7 @@ async def remove(context, *textArr) :
         content = ' '.join(textArr).strip()
         cursor.execute(f'SELECT Content FROM {GUILD.replace(' ', '')}_List WHERE Username = ? AND Content = ?', (context.author.name, content))
         listData = cursor.fetchone()
-        if (len(listData)== 0) :
+        if listData is None or len(listData) == 0:
             await context.send(f'{content} was not found in your list')
         elif (listData[0].strip() == content) :
             cursor.execute(f'DELETE FROM {GUILD.replace(' ','')}_List WHERE Content = ? AND Username = ?', (content, context.author.name))
