@@ -20,3 +20,16 @@ The bot supports:
 - Command: !silence <username>: Assigns the "Bad Boy" role, optionally mutes them and changes their nickname (admin-only).
 
 - Command: !unsilence <username>: Removes the "Bad Boy" role and unmutes the user (admin-only).
+
+## Bot Permissions
+- Manage Roles
+
+- Manage Nicknames
+
+- View Channels
+
+- Send Messages
+
+- Manage Messages
+
+- Mute Members
