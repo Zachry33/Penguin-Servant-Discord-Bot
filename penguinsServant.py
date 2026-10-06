@@ -11,6 +11,7 @@ import datetime
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
+table = 0
 
 # Add intents for the bot
 intents = discord.Intents.default()
@@ -22,9 +23,6 @@ bot = commands.Bot( command_prefix='!',intents = intents)
 # Connect bot to database and initilize table with users
 connection = sqlite3.connect('PenguinsServant.db')
 cursor = connection.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS ' + GUILD.replace(' ', '') + ' (Username TEXT PRIMARY KEY, Nick TEXT)')
-cursor.execute('CREATE TABLE IF NOT EXISTS ' + GUILD.replace(' ', '') + '_List' + ' (Content TEXT, Due INTEGER, Username TEXT, FOREIGN KEY(Username) REFERENCES ' + GUILD.replace(' ', '') + '(Username))')
-connection.commit()
 
 user = bot.user
 
@@ -104,6 +102,12 @@ def getDueDate(dtDelta) :
 @bot.event
 async def on_ready():
 
+    table = f'guild_{getGuild(GUILD).id}'
+
+    cursor.execute(f'CREATE TABLE IF NOT EXISTS {table} (Username TEXT PRIMARY KEY, Nick TEXT)')
+    cursor.execute(f'CREATE TABLE IF NOT EXISTS {table}_List' + f' (Content TEXT, Due INTEGER, Username TEXT, FOREIGN KEY(Username) REFERENCES {table} (Username))')
+    connection.commit()
+
     # Locates guild and prints information for the guild
     guild = getGuild(GUILD)
     print(f'{user} has connected to discord in the server ' f'{guild.name} (id: {guild.id})')
@@ -125,13 +129,13 @@ async def on_ready():
 
     # Insert new data into database
     for member in guild.members:
-        cursor.execute(f'INSERT OR IGNORE INTO {GUILD.replace(' ', '')} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
+        cursor.execute(f'INSERT OR IGNORE INTO {table} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
         connection.commit()
 
 # Sends a message to any user who joins the server and adds them to the db
 @bot.event
 async def on_member_join(member):
-    cursor.execute(f'INSERT OR IGNORE INTO {GUILD.replace(' ','')} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
+    cursor.execute(f'INSERT OR IGNORE INTO {table} (Username, Nick) VALUES (?, ?)', (member.name, member.nick))
     connection.commit()
     await member.create_dm()
     await member.dm_channel.send("How did you get here")
@@ -195,7 +199,7 @@ async def silence(context, *nameArr) :
                 await target.edit(mute = True)
             except:
                 print('User not in voice')
-            cursor.execute(f'UPDATE {GUILD.replace(' ','')} SET Nick = ? WHERE Username = ?', (target.nick, target.name))
+            cursor.execute(f'UPDATE {table} SET Nick = ? WHERE Username = ?', (target.nick, target.name))
             connection.commit()
             await target.edit(nick = 'Bad Boy')
             await context.send(f'{badBoy} has been silenced')
@@ -220,7 +224,7 @@ async def unsilence(context, *nameArr) :
                 await target.edit(mute = False)
             except:
                 print('User not in voice')
-            cursor.execute(f'SELECT Nick FROM {GUILD.replace(' ', '')} WHERE Username = ?', (target.name,))
+            cursor.execute(f'SELECT Nick FROM {table} WHERE Username = ?', (target.name,))
             oldNick = cursor.fetchone()
             await target.edit (nick = oldNick[0])
             await context.send(f'{goodBoy} has been forgiven')
@@ -231,7 +235,7 @@ async def list (context) :
     if context.author == bot.user:
         return
     else :
-        cursor.execute(f'SELECT Content, Due FROM {GUILD.replace(' ', '')}_List WHERE Username = ? ORDER BY Due ASC', (context.author.name,))
+        cursor.execute(f'SELECT Content, Due FROM {table}_List WHERE Username = ? ORDER BY Due ASC', (context.author.name,))
         listData = cursor.fetchall()
         output = ""
         for row in listData:
@@ -263,7 +267,7 @@ async def add (context, *textArr) :
             return
         # add the rest of the content into a string and add it to the list
         content = ' '.join(textArr[:-1]).strip()
-        cursor.execute(f'INSERT INTO {GUILD.replace(' ','')}_List (Content, Due, Username) VALUES (?, ? ,?)', (content, timestamp, context.author.name))
+        cursor.execute(f'INSERT INTO {table}_List (Content, Due, Username) VALUES (?, ? ,?)', (content, timestamp, context.author.name))
         connection.commit()
         await context.send(f'{content} added to list')
 
@@ -276,12 +280,12 @@ async def remove(context, *textArr) :
         await context.send('Improper Format')
     else :
         content = ' '.join(textArr).strip()
-        cursor.execute(f'SELECT Content FROM {GUILD.replace(' ', '')}_List WHERE Username = ? AND Content = ?', (context.author.name, content))
+        cursor.execute(f'SELECT Content FROM {table}_List WHERE Username = ? AND Content = ?', (context.author.name, content))
         listData = cursor.fetchone()
         if listData is None or len(listData) == 0:
             await context.send(f'{content} was not found in your list')
         elif (listData[0].strip() == content) :
-            cursor.execute(f'DELETE FROM {GUILD.replace(' ','')}_List WHERE Content = ? AND Username = ?', (content, context.author.name))
+            cursor.execute(f'DELETE FROM {table}_List WHERE Content = ? AND Username = ?', (content, context.author.name))
             connection.commit()
             await context.send(f'{content} has been removed from your list')
         else :
