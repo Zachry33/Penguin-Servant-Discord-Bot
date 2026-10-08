@@ -65,7 +65,7 @@ class Penguin:
     # Hug your penguin to increase affection by 2
     def hug(self) :
         self.affection+=2
-        if self.shiney == True:
+        if self.shiny == True:
             if self.affection < 5:
                 self.affection-=2
                 return f'Your penguin backs away (Affection too low: {self.affection}/10)'
@@ -92,35 +92,45 @@ class Penguin:
                 return f'🐧 You hug your penguin 🐧 (Affection + 0 (MAX): {self.affection}/10)'
             return f'🐧 Your penguin has been pet 🐧 (Affection + 2 : {self.affection}/10)'
     
-    #TODO add a way to identify which stats have leveled up
+    #TODO return a summary of level ip
     # When a penguin levels up it will upgrade stats
     # Each stat has a 50% chance to increase with the attribute geting an addtional chance
+    # List tracks which stats have leveled up
     def levelUp(self) :
         if self.exp >= self.level**2:
+            total = [0,0,0,0]
             self.level += 1
             self.exp = 0
             roll = random.randint(1,2)
             if roll == 2:
                 self.health += 1
+                total [0] += 1
             roll = random.randint(1,2)
             if roll == 2:
                 self.damage +=1
+                total[1] += 1
             roll = random.randint(1,2)
             if roll == 2:
                 self.speed +=1
+                total[2] += 1
             roll = random.randint(1,2)
             if roll == 2:
                 self.defence +=1
+                total[3] += 1
 
             roll = random.randint(1,2)
             if self.attribute == 'damage' and roll == 2:
                 self.damage+=1
+                total[1] += 1
             elif self.attribute == 'defence' and roll == 2:
                 self.defence+=1
+                total[3] += 1
             elif self.attribute == 'speed' and roll == 2:
                 self.speed+=1
+                total[2] += 1
             elif self.attribute == 'health' and roll == 2:
-                self.speed+=1
+                self.health+=1
+                total[0] += 1
             
     # Method to calculate damage the attacker Penguin to deal to the opponent Penguin
     def attack(self, opponent) :

@@ -1,3 +1,4 @@
 .env
 PenguinsServant.db
 PenguinsServant.db-journal
+.vscode
