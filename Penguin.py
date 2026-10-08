@@ -92,7 +92,6 @@ class Penguin:
                 return f'🐧 You hug your penguin 🐧 (Affection + 0 (MAX): {self.affection}/10)'
             return f'🐧 Your penguin has been pet 🐧 (Affection + 2 : {self.affection}/10)'
     
-    #TODO return a summary of level ip
     # When a penguin levels up it will upgrade stats
     # Each stat has a 50% chance to increase with the attribute geting an addtional chance
     # List tracks which stats have leveled up
@@ -131,6 +130,8 @@ class Penguin:
             elif self.attribute == 'health' and roll == 2:
                 self.health+=1
                 total[0] += 1
+
+            return f'LEVEL UP:\n\tHealth --> {self.health} + {total[0]}\n\tDamage --> {self.damage} + {total[1]}\n\tSpeed --> {self.speed} + {total[3]}\n\tDefence --> {self.defence} + {total[3]}'
             
     # Method to calculate damage the attacker Penguin to deal to the opponent Penguin
     def attack(self, opponent) :
