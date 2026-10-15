@@ -8,14 +8,14 @@ class Penguin:
     # max affection is 10 and is used to determine extra exp
     # Exp needed increases by the square of level
     # 5% chance for a shiny
-    def __innit__(self) :
+    def __init__(self) :
         self.health = random.randint(8,20)
-        self.damage = random.randint(1,6)
+        self.damage = random.randint(3,6)
         self.speed = random.randint(1,10)
         self.defence = random.randint(1,10)
         self.attribute = Penguin.attributes[random.randint(0,3)] #random attribute
         self.level = 1
-        self.affection = 10
+        self.affection = 0
         self.exp = 0
 
         #increase stats depending on attribute
@@ -77,7 +77,7 @@ class Penguin:
             elif self.affection >= 12 :
                 self.affection = 10
                 return f'✨ 🐧 You hug your penguin 🐧 ✨ (Affection + 0 (MAX): {self.affection}/10)'
-            return f'✨ 🐧 Your penguin has been pet 🐧 ✨ (Affection + 2 : {self.affection}/10)'
+            return f'✨ 🐧 You hug your penguin 🐧 ✨ (Affection + 2 (MAX): {self.affection}/10)'
         else:
             if self.affection < 5:
                 self.affection-=2
@@ -90,7 +90,7 @@ class Penguin:
             elif self.affection >= 12 :
                 self.affection = 10
                 return f'🐧 You hug your penguin 🐧 (Affection + 0 (MAX): {self.affection}/10)'
-            return f'🐧 Your penguin has been pet 🐧 (Affection + 2 : {self.affection}/10)'
+            return f'🐧 You hug your penguin 🐧 (Affection + 2 (MAX): {self.affection}/10)'
     
     # When a penguin levels up it will upgrade stats
     # Each stat has a 50% chance to increase with the attribute geting an addtional chance
@@ -131,20 +131,23 @@ class Penguin:
                 self.health+=1
                 total[0] += 1
 
-            return f'LEVEL UP:\n\tHealth --> {self.health} + {total[0]}\n\tDamage --> {self.damage} + {total[1]}\n\tSpeed --> {self.speed} + {total[3]}\n\tDefence --> {self.defence} + {total[3]}'
+            return f'LEVEL UP:\n\tHealth --> {self.health} + {total[0]}\n\tDamage --> {self.damage} + {total[1]}\n\tSpeed --> {self.speed} + {total[2]}\n\tDefence --> {self.defence} + {total[3]}'
             
     # Method to calculate damage the attacker Penguin to deal to the opponent Penguin
     def attack(self, opponent) :
-        attTokens = self.attack
+        attTokens = self.damage
         defTokens = opponent.defence
         damBlocked = 0
 
+        if (defTokens <= 0) :
+            return attTokens
+
         for i in range(defTokens):
-            roll = random.randint(0,i)
+            roll = random.randint(0,1)
             if roll == 0:
                 damBlocked += 1
             
-        attTokens -= damBlocked
+        attTokens = max(0,attTokens - damBlocked)
         return attTokens
         
         
