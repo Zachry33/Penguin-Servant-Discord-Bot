@@ -3,7 +3,9 @@ import random
 class Penguin:
 
     attributes = ['health', 'damage', 'defence', 'speed']
-    
+    # Amount each stat increases by when it grows for balance reasons
+    growth = {'health': 3, 'damage': 1, 'defence': 2, 'speed': 1}
+
     # health, damage, speed, defence, attribute, level, affection
     # max affection is 10 and is used to determine extra exp
     # Exp needed increases by the square of level
@@ -18,15 +20,8 @@ class Penguin:
         self.affection = 0
         self.exp = 0
 
-        #increase stats depending on attribute
-        if self.attribute == 'damage':
-            self.damage+=1
-        elif self.attribute == 'defence':
-            self.defence+=1
-        elif self.attribute == 'health' :
-            self.health +=1
-        else :
-            self.speed+=1
+        # Increase stats depending on attribute
+        setattr(self, self.attribute, getattr(self, self.attribute) + Penguin.growth[self.attribute])
 
         # Determine if it is a shiny
         if random.randint(1,20) == 1:
@@ -93,45 +88,30 @@ class Penguin:
             return f'🐧 You hug your penguin 🐧 (Affection + 2 (MAX): {self.affection}/10)'
     
     # When a penguin levels up it will upgrade stats
-    # Each stat has a 50% chance to increase with the attribute geting an addtional chance
-    # List tracks which stats have leveled up
+    # Each stat has a 50% chance to increase by its growth amount with the attribute getting an addtional chance
+    # Total tracks how much each stat has leveled up for output message
     def levelUp(self) :
         if self.exp >= self.level**2:
-            total = [0,0,0,0]
             self.level += 1
             self.exp = 0
-            roll = random.randint(1,2)
-            if roll == 2:
-                self.health += 1
-                total [0] += 1
-            roll = random.randint(1,2)
-            if roll == 2:
-                self.damage +=1
-                total[1] += 1
-            roll = random.randint(1,2)
-            if roll == 2:
-                self.speed +=1
-                total[2] += 1
-            roll = random.randint(1,2)
-            if roll == 2:
-                self.defence +=1
-                total[3] += 1
+            total = {}
+            for stat in Penguin.attributes:
+                total[stat] = 0
 
-            roll = random.randint(1,2)
-            if self.attribute == 'damage' and roll == 2:
-                self.damage+=1
-                total[1] += 1
-            elif self.attribute == 'defence' and roll == 2:
-                self.defence+=1
-                total[3] += 1
-            elif self.attribute == 'speed' and roll == 2:
-                self.speed+=1
-                total[2] += 1
-            elif self.attribute == 'health' and roll == 2:
-                self.health+=1
-                total[0] += 1
+            # Normal level up attempts for each stat
+            for stat in Penguin.attributes:
+                if random.randint(1,2) == 2:
+                    total[stat] += Penguin.growth[stat]
+            
+            # Extra level up attempt for the attribute
+            if random.randint(1,2) == 2:
+                total[self.attribute] += Penguin.growth[self.attribute]
 
-            return f'LEVEL UP:\n\tHealth --> {self.health} + {total[0]}\n\tDamage --> {self.damage} + {total[1]}\n\tSpeed --> {self.speed} + {total[2]}\n\tDefence --> {self.defence} + {total[3]}'
+            # Set damage, defence, health and speed to their new values
+            for stat in Penguin.attributes:
+                setattr(self, stat, getattr(self, stat) + total[stat])
+
+            return f'LEVEL UP:\n\tHealth --> {self.health} + {total["health"]}\n\tDamage --> {self.damage} + {total["damage"]}\n\tSpeed --> {self.speed} + {total["speed"]}\n\tDefence --> {self.defence} + {total["defence"]}'
             
     # Method to calculate damage the attacker Penguin to deal to the opponent Penguin
     def attack(self, opponent) :

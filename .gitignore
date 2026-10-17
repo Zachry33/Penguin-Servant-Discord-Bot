@@ -2,3 +2,4 @@
 PenguinsServant.db
 PenguinsServant.db-journal
 .vscode
+__pycache__/
