@@ -117,7 +117,7 @@ class Penguin:
     def attack(self, opponent) :
         attTokens = self.damage
         defTokens = opponent.defence
-        damBlocked = 0
+        """damBlocked = 0
 
         if (defTokens <= 0) :
             return attTokens
@@ -127,8 +127,8 @@ class Penguin:
             if roll == 0:
                 damBlocked += 1
             
-        attTokens = max(0,attTokens - damBlocked)
-        return attTokens
+        attTokens = max(0,attTokens - damBlocked)"""
+        return (attTokens*self.level)//(opponent.level+opponent.defence)
         
         
                 
