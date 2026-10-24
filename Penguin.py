@@ -2,7 +2,9 @@
 import random
 class Penguin:
 
-    attributes = ['health', 'damage', 'defence', 'speed']
+    stats = ['health', 'damage', 'defence', 'speed']
+    # Stats a penguin can have as its attribute
+    attributes = ['damage', 'defence', 'speed']
     # Amount each stat increases by when it grows for balance reasons
     growth = {'health': 3, 'damage': 1, 'defence': 2, 'speed': 1}
 
@@ -15,7 +17,7 @@ class Penguin:
         self.damage = random.randint(3,6)
         self.speed = random.randint(1,10)
         self.defence = random.randint(1,10)
-        self.attribute = Penguin.attributes[random.randint(0,3)] #random attribute
+        self.attribute = random.choice(Penguin.attributes) #random attribute
         self.level = 1
         self.affection = 0
         self.exp = 0
@@ -95,11 +97,11 @@ class Penguin:
             self.level += 1
             self.exp = 0
             total = {}
-            for stat in Penguin.attributes:
+            for stat in Penguin.stats:
                 total[stat] = 0
 
             # Normal level up attempts for each stat
-            for stat in Penguin.attributes:
+            for stat in Penguin.stats:
                 if random.randint(1,2) == 2:
                     total[stat] += Penguin.growth[stat]
             
@@ -108,16 +110,16 @@ class Penguin:
                 total[self.attribute] += Penguin.growth[self.attribute]
 
             # Set damage, defence, health and speed to their new values
-            for stat in Penguin.attributes:
+            for stat in Penguin.stats:
                 setattr(self, stat, getattr(self, stat) + total[stat])
 
-            return f'LEVEL UP:\n\tHealth --> {self.health} + {total["health"]}\n\tDamage --> {self.damage} + {total["damage"]}\n\tSpeed --> {self.speed} + {total["speed"]}\n\tDefence --> {self.defence} + {total["defence"]}'
+            return f'LEVEL UP:\n\tHealth: {self.health - total["health"]} --> {self.health} (+{total["health"]})\n\tDamage: {self.damage - total["damage"]} --> {self.damage} (+{total["damage"]})\n\tSpeed: {self.speed - total["speed"]} --> {self.speed} (+{total["speed"]})\n\tDefence: {self.defence - total["defence"]} --> {self.defence} (+{total["defence"]})'
             
     # Method to calculate damage the attacker Penguin to deal to the opponent Penguin
     def attack(self, opponent) :
         attTokens = self.damage
         defTokens = opponent.defence
-        """damBlocked = 0
+        damBlocked = 0
 
         if (defTokens <= 0) :
             return attTokens
@@ -127,8 +129,8 @@ class Penguin:
             if roll == 0:
                 damBlocked += 1
             
-        attTokens = max(0,attTokens - damBlocked)"""
-        return (attTokens*self.level)//(opponent.level+opponent.defence)
+        attTokens = max(0,attTokens - damBlocked)
+        return attTokens
         
         
                 
